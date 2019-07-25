@@ -3,6 +3,7 @@
 language: R
 cache: packages
 
+install: echo "noop"
 script:
 - Rscript -e 'install.packages(c("tinytex", "withr"))'
 - Rscript -e 'withr::with_dir("manuscript", tinytex::pdflatex("template.tex", pdf_file = "manuscript.pdf"))'
