@@ -6,6 +6,7 @@ cache:
   packages: yes
   directories:
     - $HOME/bin
+    - $HOME/.TinyTeX
 
 install: echo "noop"
 script:
