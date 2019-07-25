@@ -1,0 +1,8 @@
+# R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
+
+language: R
+cache: packages
+
+script:
+- Rscript -e 'install.packages(c("tinytex", "withr"))'
+- Rscript -e 'withr::with_dir("manuscript", tinytex::pdflatex("template.tex", pdf_file = "manuscript.pdf"))'
