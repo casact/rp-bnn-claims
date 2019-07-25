@@ -1,0 +1,422 @@
+\documentclass{article}
+
+
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+\title{Individual Claims Forecasting with Bayesian Mixture Density Networks}
+
+
+\author{
+  Kevin Kuo \\
+  RStudio, Kasa AI\\
+  \texttt{kevinykuo@gmail.com} \\
+  %% examples of more authors
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We introduce an individual claims forecasting framework utilizing Bayesian mixture density networks that can be used for claims analytics tasks such as case reserving and triaging. The proposed approach enables incorporating claims information from both structured and unstructured data sources, producing multi-period cash flow forecasts, and generating different scenarios of future payment patterns. We implement and evaluate the modeling framework using publicly available data.
+\end{abstract}
+
+
+% keywords can be removed
+\keywords{claims reserving \and individual claims reserving \and loss reserving}
+
+\section{Introduction}
+
+Individual claims reserving has garnered increasing interest in recent years. While the main benefit cited for performing reserving at the claim level over aggregate loss triangle approaches, such as chain ladder and Bornhuetter-Ferguson, is potential improvement in predictive accuracy, especially in environments with changing portfolio mix \cite{boumezoued2017individual}, there are additional practical advantages to forecasting individual claim behavior. These include being able to obtain updated views of portfolio risk as claims are reported and optimize adjuster resource allocation based on severity predictions. Although the benefits of individual claims modeling are promising, it has not yet achieved widespread adoption in practice. One potential contributing reason for the lack of adoption, we hypothesize, is the absence of a modeling framework that contains features important to practitioners. We suggest that an effective loss reserves modeling framework should be able to:
+
+\begin{itemize}
+	\item Incorporate arbitrary claims information as predictors,
+	\item Produce multi-period forecasts, and
+	\item Sample different realizations of future payment patterns.
+\end{itemize}
+Companies are capturing increasingly diverse data, such as unstructured text from claims adjusters' notes and photographs of damages uploaded by claimants, that can potentially be predictive. Timing of cash flows and being able to sample from different future states have both business decision making and regulatory applications. A subjective criterion not listed above, which may affect adoption of an approach, is that the models should be implementable without the need for extensive bespoke feature engineering or specification of complex assumptions for underlying stochastic processes.
+
+In this work, we propose an extensible individual claims forecasting framework towards satisfying the above criteria that utilizes ideas from Bayesian neural networks (BNN) \cite{Neal:1996:BLN:525544} and mixture density networks (MDN) \cite{bishop1994mixture}. Concretely, our contributions are:
+
+\begin{itemize}
+	\item Development of a individual claims forecasting framework based on Bayesian Mixture Density Networks (BMDN.)
+	\item Implementation of the proposed framework using publicly available claims-level data, which provides a baseline for future work to compare against.
+\end{itemize}
+
+\section{Related Work}
+
+There is extensive literature on claims-level reserving, and \cite{boumezoued2017individual} provides a recent and comprehensive survey. Of the proposed approaches, so far only \cite{wuthrich2018machine} suggests using machine learning algorithms to incorporate diverse claims characteristics inputs. It demonstrates a simple model where regression trees are used to predict the number of payments, and suggests extensions such as compound modeling to predict severity and bootstrap simulation to obtain prediction uncertainty. However, it does not provide for a natural sampling procedure for future states, when compared to the generative approaches of, for example, \cite{antonio2014micro, pigeon2013individual, pigeon2014individual}. In this latter category of methodologies, a set of distributional assumptions are posited for the different drivers of claims, such as time to the next payment and its amount. These distributions are fit to the data, then, with the obtained parameters, the modeler is able to perform simulations of future development paths by sampling from the fitted distributions. The main drawback of this approach is that it is difficult to incorporate individual claim characteristics; to differentiate among different characteristics, one would have to segment the claims and fit separate models to each group.
+
+In formulating our framework, we also draw inspiration from machine learning approaches to aggregate triangle data, including \cite{gabrielli2018neural} which embeds a neural network in a classical parametric loss reserving model, and the DeepTriangle \cite{kuo2018deeptriangle} framework, whose neural architecture we adapt for individual claims data.
+
+\section{Preliminaries}
+
+We begin with a description of the loss reserving problem then briefly discuss BNN and MDN, two ideas that we incorporate into our claims forecasting neural network. As neural networks have been utilized and discussed extensively in recent loss reserving and actuarial literature \cite{gabrielli2018neural, kuo2018deeptriangle, gabrielli2018individual, richman2018neural}, we defer discussion of neural network fundamentals to those works and the standard reference \cite{Goodfellow-et-al-2016}. To aid the practicing actuary in consuming this paper, we expand on certain concepts when we introduce the proposed neural network architecture in Section \ref{sec:claims-forecasting-model}.
+
+\subsection{The Loss Reserving Problem}
+
+Figure \ref{fig:claimrunoff} shows a diagram of the development of a typical claim. We first point out that there can be a time difference, known as the report lag, between an accident's occurrence and its reporting. The accidents which have been reported to the insurer, but not yet settled, are known as reported but not settled (RBNS) or, equivalently, incurred but not enough reported (IBNER) claims, while the accidents which have occurred but are yet unknown to the insurer are known as incurred but not reported (IBNR) claims. The reserving actuary is interested in estimating the ultimate loss amounts associated with accidents that have already occurred. As demonstrated in Figure \ref{fig:claimrunoff}, it is possible for a closed claim to re-open, and it is also possible for a claim to be closed without any cash flows.
+
+In this paper, we are concerned with RBNS/IBNER, but not IBNR, claims, due to limitations of available data. Also, the claims we study encompass closed claims to allow for the possibility of claim re-opening.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.7\textwidth]{images/claim_runoff.png}
+  \end{center}
+  \caption{Development of a claim}
+  \label{fig:claimrunoff}
+\end{figure}
+
+\subsection{Bayesian Inference on Neural Networks} \label{section:bnn}
+
+In this section, we briefly discuss Bayesian inference on neural networks, following the discourse in \cite{graves2011practical} and \cite{blundell2015weight}.
+
+Consider a neural network parameterized by weights $w$ that takes input $x$ and returns output $y$. We can view this general formulation as a probabilistic model $P(y|x, w)$; as an example, in the case of scalar regression where $y \in \mathbb{R}$, mean squared loss is specified, and constant variance is assumed, $P(y|x, w)$ corresponds to a Gaussian distribution.
+
+Rather than treating $w$ as a point estimate, we assume that it is a random variable with some prior distribution $P(w)$. The task is then to compute the posterior distribution $P(w|x, y)$ given the training data. We can then calculate the predictive distribution $P(y^*|x^*) = \mathbb{E}_{P(w|x, y)}[P(y^*|x^*, w)]$, where $X^*$ is a new data point to be scored and $Y^*$ the corresponding unknown response. However, the challenge is that $P(w|x, y)$ is intractable for any nontrivial neural network. Variational inference provides a workaround to this problem by approximating the posterior with a more tractable distribution $q(w|\theta)$ and formulates an optimization problem to find the parameters $\theta$. Specifically, we minimize the Kullback-Leibler (KL) divergence from the true posterior distribution $P$ to the approximate distribution $q$:
+
+\begin{align}
+    \theta^* &= \arg \min_\theta D_{KL}(q(w|\theta) \Vert P(w|x, y))\\
+             &= \arg \min_\theta \int q(w|\theta) \log \frac{q(w|\theta)}{P(w)P(x, y|w)} dw\\
+             &= \arg \min_\theta D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(x, y|w)]. \label{eq:1}
+\end{align}
+
+In the above, the KL divergence $D_{KL}$ is defined in general for probability distributions $P$ to $Q$ as
+
+\begin{equation}
+    D_{KL}(P \Vert Q) = \int p(x) \log \frac{p(x)}{q(x)} dx.
+\end{equation}
+
+Equation \ref{eq:1} then gives us the optimization objective,
+
+\begin{equation}
+    \mathcal{F}(\theta) = D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(x, y|w)],
+\end{equation}
+
+which is also known as the \textit{variational free energy}. In practice, during training, we use the empirical approximation
+
+\begin{equation}
+    \mathcal{F}(\theta) \approx \frac{1}{N} \sum_{i=1}^N [\log q(w^{(i)}|\theta) - \log P(w^{(i)}) - \log P(x, y|w^{(i)})],
+\end{equation}
+
+where the $w^{(i)}$ are Monte Carlo draws from $q(w|\theta)$.
+
+\subsection{Mixture Density Networks}
+
+In practical applications, the response variables we try to predict often have multimodal distributions and exhibit heteroscedastic errors. This is particular relevant in forecasting claims cash flows since, in a given time period, there could be a large payment or little or no payment. An MDN allows the output to follow a mixture of arbitrary distributions and estimate each of its parameters with the neural network. Recall that a mixture distribution has a distribution function of the form
+
+\begin{equation}
+    F(x) = \sum_{i = 1}^n w_i P_i(x),
+\end{equation}
+
+where each $w_i \geq 0$, $\sum w_i = 1$, and $n$ is the number of component distributions $P_i$. Letting $\mathcal{P}$ denote the union of the sets of parameters for the distributions $P_1, \dots, P_n$, the neural network must then output $n + |\mathcal{P}|$ values. The first $n$ values determine the categorical distribution of the mixing weights, and the $|\mathcal{P}|$ outputs parameterize the component distributions.
+
+By obtaining distributions rather than single points as prediction outputs, we also gain a straightforward mechanism to quantify the uncertainty of individual cash flow forecasts.
+
+\section{Data and Model}
+
+In this section, we describe the data used for our experiments and the proposed model.
+
+\subsection{Data}
+
+We utilize an individual claims history simulator \cite{gabrielli2018individual} to generate data for our experiments. For each claim, we have the following static information: line of business, labor sector of the injured, accident year, accident quarter, age of the injured, part of body injured, and the reporting year. In addition, we also have 12 years of claim development information, in the form of cash flows and claims statuses (whether the claim is open or not.) The generated claims history exhibit behaviors such as negative cash flows for recoveries and late reporting, which mimic realistic scenarios.
+
+Since we only have claims data and not policy level and exposure data, we study only reported claims.
+
+\subsection{Experiment Setup}
+
+We first simulate approximately 500,000\footnote{The number of claims generated is stochastic; in our case, we draw 500,904 claims.} claims using the simulator, which provides us with the full development history of these claims. The claims cover accident years 1994 to 2005. Since we are concerned with reported claims, we remove claims with report date after 2005, which leaves us with N = 497,516 claims. In this paper, we assume that each claim is fully developed at development year 11 (note that in the dataset the first year is denoted year 0.) More formally, we can represent the dataset as the collection
+
+\begin{equation}
+    \mathcal{D} = \{ (X^{(j)}, (C_i^{(j)})_{0 \leq i \leq 11}, (S_i^{(j)})_{0 \leq i \leq 11}): j\in {1,\dots, N}\},
+\end{equation}
+
+where $X$, $(C_i)$, and $(S_i)$ denote the static claim features, cash flow sequences, and claim status sequences, respectively, and $j$ indexes the claims.
+
+To create the training and testing sets, we select year 2005 as the evaluation year cutoff. For the training set, any cash flow information available after the 2005 is removed. In symbols, we have
+
+\begin{equation}
+    \mathcal{D}_{\text{train}} = \{ (X^{(j)}, (C_i^{(j)}), (S_i^{(j)})): i + \text{AY}^{(j)} \leq 2005, j \in {1,\dots, N}\},
+\end{equation}
+where $\text{AY}^{(j)}$ denotes the accident year associated with claim $j$.
+
+For each claim in the training set, we create a training sample for each time period after year 0. The response variable consists of cash flow information available as of the end of each time period until the evaluation year cutoff, and predictors are derived from information available before the time period. For a claim $j$, we have the following input-output pairs:
+
+\begin{equation}\label{eq:training-samples}
+    \{((X^{(j)}, (C_0, \dots, C_i), (S_0, \dots, S_i)), (C_{i+1}, \dots, C_{k^{(j)}})): i = 0, \dots, k^{(j)} - 1\},
+\end{equation}
+
+where $k^{(j)}$ denotes the latest development year for which data is available for claim $j$ in the training set. As an example, if a claim has an accident year of 2000, five training samples are created. The first training sample has cash flows from 2001 to 2005 for the response and one cash flow value from 2000 for the predictor, while the last training sample has only the cash flow in year 2005 for the response and cash flows from 2000 to 2004 for the predictor.
+
+The training samples in Equation \ref{eq:training-samples} undergo additional transformations before they are used for training our model. We discuss these transformations in detail in the next section.
+
+\subsection{Feature Engineering} \label{sec:fe}
+
+We exhibit the predictors used and associated transformations in Table \ref{table:vars}. In the raw simulated data, each time period has a cash flow amount along with a claim open status indicator associated with it. We take the cash flow value and derive two variables from it: the paid loss and the recovery, corresponding to the positive part and negative part of the cash flow, respectively. In other words, For each claim and for each time step, at most one of paid loss and recovery can be nonzero. For predictors, both the paid losses and recoveries are centered and scaled with respect to all instances of their values in the training set. The target cash flow values are not normalized.
+
+Claim status indicator, which is a scalar value of 0 or 1, is one-hot encoded; for each training sample a claim status value is available for each time step.
+
+Development year is defined as the number of years since the accident occurred. It is then scaled to $[0, 1]$.
+
+The static claim characteristic variables include age, line of business, occupation of the claimant, and the injured body part. Of these, age is numeric while the others are categorical. We center and scale the age variable and integer-index the others, which are fed into embedding layers, discussed in the next section.
+
+As noted in the previous section, the response variable and the sequence predictors can have different lengths (in terms of time steps) from one sample to the next. To facilitate computation, we pre-pad and post-pad the sequences with a predetermined masking value so that all sequences have a fixed length of 11.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}[t]{lll}
+\toprule
+Variable & Type & Preprocessing\\
+\midrule
+Paid loss history      & Numeric sequence         & Centered and scaled\\
+Recovery history       & Numeric sequence         & Centered and scaled\\
+Claim status history   & Categorical sequence     & One-hot encoded\\
+Development year       & Integer                  & Scaled to [0, 1]\\
+Age                    & Numeric                  & Centered and scaled\\
+Line of business       & Categorical              & Indexed\\
+Claim code (occupation)& Categorical              & Indexed\\
+Injured part           & Categorical              & Indexed\\
+\bottomrule\\[1ex]
+\end{tabular}
+\caption{Predictor variable and transformations.}
+\label{table:vars}
+\end{table}%
+
+\subsection{Claims Forecasting Model}\label{sec:claims-forecasting-model}
+
+We utilize an encoder-decoder architecture with sequence output similar to the model proposed by \cite{kuo2018deeptriangle}. The architecture is illustrated in Figure \ref{fig:architecture}. We first provide a brief overview of the architecture, then provide details on specific components later in the section.
+
+The output in our case is the future sequence of loss payments, and the input is the cash flow and claim status history along with static claim characteristics.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{images/architecture.png}
+  \end{center}
+  \caption{Claims forecasting model architecture. Note that the weights for the variational dense layers are shared across time steps.}
+  \label{fig:architecture}
+\end{figure}
+
+Static categorical variable inputs, such as labor sector of the injured, are indexed then connected to embedding layers \cite{guo2016entity} and sequential data, including payments and claim statuses, are connected to long short-term memory (LSTM) layers \cite{hochreiter1997long}.
+
+The encoded inputs are concatenated together then repeated 11 times before being passed to a decoder LSTM layer which returns a sequence. The length of this output sequence is so chosen to match our requirement to forecast a maximum of 11 steps into the future. Each time step of this sequence is connected to two dense variational layers, each of which parameterizes an output distribution, corresponding to paid losses and recoveries, respectively. The weights of the dense variational layer (for paid loss and recovery) are each shared across the time steps. In other words, for each training sample, we output two 11-dimensional random variables, each of which can be considered as a collection of 11 independent but non-identically distributed random variables.
+
+We use the same loss function for each output and weight them equally for model optimization. The loss function is the negative log-likelihood given the target data with an adjustment for variable output lengths which we discuss in detail in Section \ref{sec:loss-function}.
+
+In the remainder of this section, we discuss in more detail embedding layers, LSTM, our choices of the variational and distribution layers, the loss function, and model training.
+
+\subsubsection{Embedding Layer}
+
+An embedding layer maps each level of a categorical variable to a fixed length vector in $n$-dimensional Euclidean space. The value of $n$ is a hyerparameter chosen by the modeler; in our case we select $n = 2$ for all embedding layers, which means we map each factor level to a point in $\mathbb{R}^2$. In contrast to data-preprocessing dimensionality techniques such as principal component analysis (PCA) or t-distributed stochastic neighbor embedding (t-SNE), the values of the embeddings are learned during training of the neural network.
+
+\subsubsection{Long Short-Term Memory}
+
+LSTM is a type of recurrent neural network (RNN) architecture that is appropriate for sequential data, such as natural language or time series (our use case.) Empirically, LSTM is more apt at handling data with longer term dependencies than simple RNN \cite{lecun2015deep}.
+
+\subsubsection{Dense Variational Layer}
+
+We choose Gaussians for both the prior and surrogate posterior distributions over the weights of the dense layers. The prior distribution is constrained to have zero mean and unit variance while for the posterior both the mean and variance are trainable. Symbolically, if we let $w$ denote the weights associated with each dense layer, we have
+
+\begin{equation}
+    w \sim \mathcal{N}(0, I) \text{ and}
+\end{equation}
+\begin{equation}
+    w|\theta \sim \mathcal{N}(\mu(\theta), \sigma(\theta)),
+\end{equation}
+
+where $\theta$ represent trainable parameters. The KL term associated with estimation, as described in \ref{section:bnn}, is added to the neural network loss during optimization. The dense layers each output four units to parameterize the output distributions which we discuss next.
+
+\subsubsection{Output Distribution}
+
+For each of the 11 time steps we forecast, we parameterize two distributions, one for paid losses and one for recoveries. Each of the distributions is chosen to be a mixture of of a shifted log-normal distribution and a deterministic degenerate distribution localized at zero, representing cash flow and no cash flow, respectively. Denoting $\{v_1,\dots,v_4\}$ to be the output of the preceding dense variational layer, we have the following as the distribution function:
+
+\begin{equation} \label{eq:fx}
+    F(x) = w_1(v_1, v_2)P(x; v_3, (\alpha + \lambda\sigma(\beta v_4))^2) + w_2(v_1, v_2)F_0(x),
+\end{equation}
+
+where 
+
+\begin{equation}
+    w_i = \frac{e^{v_i}}{e^{v_1} + e^{v_2}}\quad (i = 1, 2)
+\end{equation}
+
+are the normalized mixing weights, $P(x; \mu, \sigma^2)$ denotes the cumulative density function for a log-normal distribution with location and scale parameters $\mu$ and $\sigma$, respectively, shifted to the left by 0.001 to accommodate zeros in the data,
+
+\begin{equation}
+    F_{0}(x)=\left\{\begin{matrix} 1, & \mbox{if }x\ge 0 \\ 0, & \mbox{if }x<0 \end{matrix}\right.
+\end{equation}
+
+is the distribution function for the deterministic distribution, and $\sigma$ is the sigmoid function defined as
+
+\begin{equation}
+    \sigma(t) = \frac{1}{1 + e^{-t}}.
+\end{equation}
+
+In Equation \ref{eq:fx}, the constants $\alpha, \beta > $ are included for numerical stability and can be tuned as hyperparameters, although we set them to $0.001$ and $0.01$, respectively, for our experiments. The purpose of $\lambda$ is also numerical stability, as the scale parameter of the log-normal distribution is hard to learn in practice, so we bound it above by a constant. In our experiments we fix it to be $0.7$.
+
+We assume that the output distributions are independent across the time steps, which facilitates the derivation of the loss function in the next section.
+
+\subsubsection{Loss Function}\label{sec:loss-function}
+
+We calculate the log-likelihood loss for each output by computing the log probability of the true labels with respect to the output distributions. As mentioned in Section \ref{sec:fe}, the output sequences may contain masking values that need to be adjusted. Specifically, we marginalize out the components with the masking values. Formally, for a given training sample, let $M$ denote the masking constant, $Y=(Y_1,\dots,Y_{11})$ denote the output sequence, $Y_{\mathcal{T}_M} = (Y_i: Y_i = M)$, and, abusing notation, also let $\mathcal{T}_M = \{i: Y_i = M\}$. Then,
+
+\begin{align}
+    f_{Y\setminus Y_{\mathcal{T}_M}}(Y) &= \int_{Y_{\mathcal{T}_M}} f(Y) dY_{\mathcal{T}_M}\\
+         &= \int_{Y_{\mathcal{T}_M}} f(Y\setminus Y_{\mathcal{T}_M}, Y_{\mathcal{T}_M}) dY_{\mathcal{T}_M}\\
+         &= f_{Y\setminus Y_{\mathcal{T}_M}}(Y\setminus Y_{\mathcal{T}_M}) \int_{Y_{\mathcal{T}_M}} f_{Y_{\mathcal{T}_M}}(Y_{\mathcal{T}_M}) dY_{\mathcal{T}_M} \quad \text{(by independence)}\\
+         &= f_{Y\setminus Y_{\mathcal{T}_M}}(Y\setminus Y_{\mathcal{T}_M})\\
+         &= \prod_{i \notin \mathcal{T}_M} f_{Y_i}(Y_i).
+\end{align}
+
+The adjusted log-likelihood then becomes
+
+\begin{align}
+    \log\mathcal{L}(Y) &= \log  f_{Y\setminus Y_{\mathcal{T}_M}}(Y)\\
+                       &= \log \prod_{i \notin \mathcal{T}_M} f_{Y_i}(Y_i)\\
+                       &= \sum_{i = 1}^{T}\log f_{Y_i}(Y_i),
+\end{align}
+
+where $T$ is $\min \mathcal{T}_M - 1$ if $\mathcal{T}_M$ is nonempty and 11 otherwise.
+
+Hence, the log-likelihood associated with a training sample is the sum of the log probabilities of the non-masked elements. The negative log-likelihood, summed with the KL term associated with the variational layers, comprise the total network loss for optimization.
+
+\subsubsection{Training and Scoring}
+
+We use a random subset of the training set consisting of 5\% of the records as the validation set for determining early stopping and scheduling the learning rate. For optimizing the neural network, we use stochastic gradient descent with an initial learning rate of 0.01 and a minibatch size of 100,000, and halve the learning rate when there is no improvement in the validation loss for five epochs. Training is stopped early when the validation loss does not improve for ten epochs; we cap the maximum number of epochs at 100. Here, an \textit{epoch} refers to a complete iteration through our training dataset, and the \textit{minibatch} size refers to how many training samples we randomly sample for each gradient descent step.
+
+To forecast an individual claim, we construct a scoring data point by using all data available to us as of the evaluation date cutoff. In other words, the last elements of the predictor cash flow sequences correspond to the actual value from the cutoff year. Hence, in the output sequence, the first element corresponds to the prediction of the cash flow distribution of the year after the cutoff.
+
+Recall that our model weights are a random variable, so each time we score a new data point, we are sampling from the distribution of model weights and expect to obtain different parameters for the distributions of cash flows. The output distributions themselves are also stochastic and can be sampled from. Following \cite{NIPS2017_7141}, we refer to the former variability as \textit{epistemic} uncertainty and the latter as \textit{aleatoric} uncertainty. Epistemic uncertainty reflects uncertainty about our model which can be reduced given more training data, while aleatoric uncertainty reflects the irreducible noise in the observations.
+
+Generating a distribution of future paths of cash flows amounts to repeating the procedure of drawing a model from its distribution, calculating the output distribution parameters using the drawn model, then drawing a sample of cash flows from the distribution. Since we decompose the cash flows into paid losses and recoveries, we can obtain net amounts by subtracting the generated recoveries from the generated paid losses.
+
+If we were only interested in point estimates, we can avoid sampling the output distributions and simply compute their means, since given the model weights we have closed form expressions for the distributions given by Equation \ref{eq:fx}. Note that we would still have to sample the model weights.
+
+\section {Results and Discussion}
+
+We evaluate our modeling framework by qualitatively inspecting samples paths generated for an individual claim and also comparing the aggregate estimate of unpaid claims with a chain ladder estimate. We note that, to the best of our knowledge, prior to the current paper, there is not a benchmark for individual claims forecasts. We also discuss the extensibility of our approach to accommodate company specific data elements and expert knowledge. The experiments are implemented using the R programming language \cite{r2018} and TensorFlow \cite{tensorflow2015-whitepaper}.
+
+\subsection{Individual Claim Forecasts}
+
+Figure \ref{fig:prob_cash_flows} shows various posterior densities, obtained by sampling the model weights 1,000 times, of parameters for the output distributions of a single claim. Our model assigns a higher probability of payment in the next year along with more variability around that probability. It can be seen that the expected probability of a payment decreases as we forecast further into the future. Given that a loss payment occurs, we see from the middle and bottom plots that both the expected value and the variability for both the mean and variance of the log-normal distributions increase with time. In other words, for this particular claim, loss payments become less likely as time goes on, but if they occur, they tend to be more severe and the model is less certain about the severity distribution.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.8\textwidth]{images/posteriors.png}
+  \end{center}
+  \caption{Posterior distributions. (Top) Payment probability. (Middle) Mean of loss payment distribution. (Bottom) Log variance of payment distribution.}
+  \label{fig:prob_cash_flows}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.8\textwidth]{images/claim_paths.png}
+  \end{center}
+  \caption{1,000 samples of cumulative cash flow paths for a single claim. The training data includes development year 4 and the predictions begin in development year 5.}
+  \label{fig:claim_paths}
+\end{figure}
+
+In Figure \ref{fig:claim_paths} we show plausible future developments of the claim. Note that one thousand samples are drawn, so the handful scenarios that present large payments represent a small portion of the paths, which is consistent with the distributions of parameters we see above.
+
+\subsection{Aggregate estimates}
+
+To compute a point estimate for the total unpaid losses, we score each claim once (i.e. sample from the weights distribution once) to obtain a distribution for each time step for paid losses and recoveries. We then compute the means of the paid loss and recovery distributions and take the differences to obtain the net cash flow amount. The final unpaid loss estimate is then the sum of all the net amounts up to and including development year 11. Since there is randomness in the neural network weight initialization, we instantiate and train the model 10 times, and take the average of the predicted future paid losses across the 10-model ensemble. In practice, one could distribute the prediction procedure over a computing cluster and draw more samples for an even more stable estimate.
+
+For the chain ladder development method benchmark, we calculate ultimate losses using all-year weighted age-to-age factors, then subtract the already paid amounts to arrive at the unpaid estimate. The unpaid amounts from the two approaches are then compared to the actual unpaid amounts. The results are shown in Table \ref{table:results}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}[t]{lll}
+\toprule
+Model & Forecast & Error\\
+\midrule
+Actual                                & 109,216,388  & --\\
+Chain Ladder                          & 116,105,216  & $+6.31\%$\\
+Ours (10-Model Ensemble)              & 102,502,710  & $-6.15\%$\\
+\bottomrule\\[1ex]
+\end{tabular}
+\caption{Aggregate forecast results.}
+\label{table:results}
+\end{table}%
+
+While we are not improving on chain ladder estimates at the aggregate level for this particular simulated dataset, our approach is able to provide individual claims forecasts, which are interesting in their own right.
+
+\subsection{Extensibility}
+
+One of the primary advantages of neural networks is their flexibility. Considering the architecture described in Section \ref{sec:claims-forecasting-model}, we can include additional predictors by appending additional input layers. These inputs can be unstructured and we can leverage appropriate techniques to process them before combining with the existing features. For example, we may utilize convolutional layers to transform image inputs and recurrent layers to transform audio or text inputs.
+
+The forms of the output distributions can also be customized. We choose a log-normal mixture for our dataset, but depending on the specific book of business, one may want to specify a different distribution, such as a Gamma or a Gaussian. As we have done in constraining the scale parameter of the log-normal distribution, the modeler also has the ability to bound or fix specific parameters as situations call for them.
+
+\section{Conclusion}
+
+We have introduced a framework for individual claims forecasting that can be utilized in loss reserving. By leveraging Bayesian neural networks and stochastic output layers, our approach provides ways to learn uncertainty from the data. It is also able to produce cash flow estimates for multiple future time periods. Experiments confirm that the approach gives reasonable results and provides a viable candidate for future work on individual claims forecasting to benchmark against.
+
+There are a few potential avenues for enhancements and extensions, including: larger scale simulations to evaluate the quality of uncertainty estimates, evaluating against new datasets, and relaxing simplifying assumptions such as the independence of time steps to obtain more internally consistent forecasts. One main limitation of the proposed approach and experiments is that we focus on reported claims only. With access to policy level data, a particular interesting direction of research would be to extend the approach to also estimate IBNR claims.
+
+\section{Acknowledgments}
+
+(TODO)
+
+\bibliographystyle{unsrt}  
+\bibliography{ref}  %%% Remove comment to use the external .bib file (using bibtex).
+%%% and comment out the ``thebibliography'' section.
+
+
+%%% Comment out this section when you \bibliography{references} is enabled.
+% \begin{thebibliography}{1}
+
+% \bibitem{kour2014real}
+% George Kour and Raid Saabne.
+% \newblock Real-time segmentation of on-line handwritten arabic script.
+% \newblock In {\em Frontiers in Handwriting Recognition (ICFHR), 2014 14th
+%   International Conference on}, pages 417--422. IEEE, 2014.
+
+% \bibitem{kour2014fast}
+% George Kour and Raid Saabne.
+% \newblock Fast classification of handwritten on-line arabic characters.
+% \newblock In {\em Soft Computing and Pattern Recognition (SoCPaR), 2014 6th
+%   International Conference of}, pages 312--318. IEEE, 2014.
+
+% \bibitem{hadash2018estimate}
+% Guy Hadash, Einat Kermany, Boaz Carmeli, Ofer Lavi, George Kour, and Alon
+%   Jacovi.
+% \newblock Estimate and replace: A novel approach to integrating deep neural
+%   networks with existing applications.
+% \newblock {\em arXiv preprint arXiv:1804.09028}, 2018.
+
+% \end{thebibliography}
+
+% \newpage 
+% 
+% \appendix
+% 
+% \section{Neural Network Basics}\label{sec:appendix}
+% 
+% (TODO)
+
+\end{document}
