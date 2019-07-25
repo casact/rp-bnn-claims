@@ -67,7 +67,9 @@ fi
 
 export PATH="$TEXLIVE_BIN:$PATH"
 
-python "$TEXLIVEONFLY" -c latexmk -a "-g -pdf -synctex=1 -interaction=nonstopmode" manuscript/template.tex 
+cd manuscript
+python "$TEXLIVEONFLY" -c latexmk -a "-g -pdf -synctex=1 -interaction=nonstopmode" template.tex
 
+cd ..
 mkdir -p dist
 cp *.pdf dist
