@@ -1,9 +1,21 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
 language: R
-cache: packages
+latex: false
+cache: 
+  packages: yes
+  directories:
+    - $HOME/bin
 
 install: echo "noop"
 script:
 - Rscript -e 'install.packages(c("tinytex", "withr"))'
-- Rscript -e 'withr::with_dir("manuscript", tinytex::pdflatex("template.tex", pdf_file = "manuscript.pdf"))'
+- Rscript -e 'withr::with_dir("manuscript", tinytex::pdflatex("template.tex", pdf_file = "dist/manuscript.pdf"))'
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  on:
+    branch: master
+  local_dir: manuscript/dist
