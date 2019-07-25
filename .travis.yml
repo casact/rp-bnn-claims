@@ -10,7 +10,6 @@ cache:
 
 install: echo "noop"
 script:
-- Rscript -e 'install.packages(c("tinytex", "withr"))'
 - Rscript -e 'tinytex::install_tinytex()'
 - Rscript -e 'tinytex::tlmgr_install("cm-super")'
 - Rscript -e 'dir.create("manuscript/dist")' 
