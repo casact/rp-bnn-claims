@@ -10,6 +10,7 @@ cache:
 install: echo "noop"
 script:
 - Rscript -e 'install.packages(c("tinytex", "withr"))'
+- mkdir manuscript/dist
 - Rscript -e 'withr::with_dir("manuscript", tinytex::pdflatex("template.tex", pdf_file = "dist/manuscript.pdf"))'
 
 deploy:
