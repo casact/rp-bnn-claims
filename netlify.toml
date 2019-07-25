@@ -1,7 +1,0 @@
-[build]
-  command = "bash build.sh"
-
-[[redirects]]
-  from = "/"
-  to = "/template.pdf"
-  status = 200
