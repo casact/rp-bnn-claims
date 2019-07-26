@@ -10,7 +10,7 @@ cache:
 
 install: echo "noop"
 script:
-- Rscript -e 'if (tinytex::tinytex_root() != "") tinytex::install_tinytex()'
+- Rscript -e 'if (tinytex::tinytex_root() == "") tinytex::install_tinytex()'
 - Rscript -e 'tinytex::tlmgr_install("cm-super")'
 - Rscript -e 'dir.create("manuscript/dist")' 
 - Rscript -e 'withr::with_dir("manuscript", tinytex::pdflatex("template.tex", pdf_file = "dist/manuscript.pdf"))'
