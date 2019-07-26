@@ -6,10 +6,11 @@ cache:
   packages: yes
   directories:
     - $HOME/bin
-    - $HOME/.TinyTeX
+    - /home/travis/.TinyTeX
 
 install: echo "noop"
 script:
+- Rscript -e 'print(tinytex::tinytex_root())'
 - Rscript -e 'tinytex::install_tinytex()'
 - Rscript -e 'tinytex::tlmgr_install("cm-super")'
 - Rscript -e 'dir.create("manuscript/dist")' 
