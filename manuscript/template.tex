@@ -82,9 +82,9 @@ We begin with a description of the loss reserving problem then briefly discuss B
 
 \subsection{The Loss Reserving Problem}
 
-Figure \ref{fig:claimrunoff} shows a diagram of the development of a typical claim. We first point out that there can be a time difference, known as the report lag, between an accident's occurrence and its reporting. The accidents which have been reported to the insurer, but not yet settled, are known as reported but not settled (RBNS) or, equivalently, incurred but not enough reported (IBNER) claims, while the accidents which have occurred but are yet unknown to the insurer are known as incurred but not reported (IBNR) claims. The reserving actuary is interested in estimating the ultimate loss amounts associated with accidents that have already occurred. As demonstrated in Figure \ref{fig:claimrunoff}, it is possible for a closed claim to re-open, and it is also possible for a claim to be closed without any cash flows.
+Figure \ref{fig:claimrunoff} shows a diagram of the development of a typical claim. We first point out that there can be a time difference, known as the reporting lag, between an accident's occurrence and its reporting. The accidents which have been reported to the insurer, but not yet settled, are known as reported but not settled (RBNS) or, equivalently, incurred but not enough reported (IBNER) claims, while the accidents which have occurred but are yet unknown to the insurer are known as incurred but not reported (IBNR) claims. The reserving actuary is interested in estimating the ultimate loss amounts associated with accidents that have already occurred. As demonstrated in Figure \ref{fig:claimrunoff}, it is possible for a closed claim to re-open, and it is also possible for a claim to be closed without any cash flows.
 
-In this paper, we are concerned with RBNS/IBNER, but not IBNR, claims, due to limitations of available data. Also, the claims we study encompass closed claims to allow for the possibility of claim re-opening.
+In this paper, we are concerned with RBNS/IBNER, but not IBNR, claims, due to limitations of available data, as for IBNR claims we do not have individual claim feature information available. Also, the claims we study encompass closed claims to allow for the possibility of claim re-opening.
 
 \begin{figure}
   \begin{center}
@@ -98,9 +98,9 @@ In this paper, we are concerned with RBNS/IBNER, but not IBNR, claims, due to li
 
 In this section, we briefly discuss Bayesian inference on neural networks, following the discourse in \cite{graves2011practical} and \cite{blundell2015weight}.
 
-Consider a neural network parameterized by weights $w$ that takes input $x$ and returns output $y$. We can view this general formulation as a probabilistic model $P(y|x, w)$; as an example, in the case of scalar regression where $y \in \mathbb{R}$, mean squared loss is specified, and constant variance is assumed, $P(y|x, w)$ corresponds to a Gaussian distribution.
+Consider a neural network parameterized by weights $w$ that takes input $x$ and returns output $y$. We can view this general formulation as a probabilistic model $P(y|x, w)$; as an example, in the case of linear regression where $y \in \mathbb{R}$, mean squared loss is specified, and constant variance is assumed, $P(y|x, w)$ corresponds to a Gaussian distribution.
 
-Rather than treating $w$ as a point estimate, we assume that it is a random variable with some prior distribution $P(w)$. The task is then to compute the posterior distribution $P(w|x, y)$ given the training data. We can then calculate the predictive distribution $P(y^*|x^*) = \mathbb{E}_{P(w|x, y)}[P(y^*|x^*, w)]$, where $X^*$ is a new data point to be scored and $Y^*$ the corresponding unknown response. However, the challenge is that $P(w|x, y)$ is intractable for any nontrivial neural network. Variational inference provides a workaround to this problem by approximating the posterior with a more tractable distribution $q(w|\theta)$ and formulates an optimization problem to find the parameters $\theta$. Specifically, we minimize the Kullback-Leibler (KL) divergence from the true posterior distribution $P$ to the approximate distribution $q$:
+Rather than treating $w$ as a point estimate, we assume that it is a random variable with some prior distribution $P(w)$. The task is then to compute the posterior distribution $P(w|x, y)$ given the training data. We can then calculate the predictive distribution $P(y^*|x^*) = \mathbb{E}_{P(w|x, y)}[P(y^*|x^*, w)]$, where $x^*$ is a new data point to be scored and $Y^*$ the corresponding unknown response. However, the challenge is that $P(w|x, y)$ is intractable for any nontrivial neural network. Variational inference provides a workaround to this problem by approximating the posterior with a more tractable distribution $q(w|\theta)$ and formulates an optimization problem to find the parameters $\theta$. Specifically, we minimize the Kullback-Leibler (KL) divergence from the true posterior distribution $P$ to the approximate distribution $q$:
 
 \begin{align}
     \theta^* &= \arg \min_\theta D_{KL}(q(w|\theta) \Vert P(w|x, y))\\
@@ -108,10 +108,10 @@ Rather than treating $w$ as a point estimate, we assume that it is a random vari
              &= \arg \min_\theta D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(x, y|w)]. \label{eq:1}
 \end{align}
 
-In the above, the KL divergence $D_{KL}$ is defined in general for probability distributions $P$ to $Q$ as
+In the above, the KL divergence $D_{KL}$ is defined in general for probability distributions $Q$ to $P$ as
 
 \begin{equation}
-    D_{KL}(P \Vert Q) = \int p(x) \log \frac{p(x)}{q(x)} dx.
+    D_{KL}(Q \Vert P) = \int q(x) \log \frac{q(x)}{p(x)} dx.
 \end{equation}
 
 Equation \ref{eq:1} then gives us the optimization objective,
