@@ -96,19 +96,19 @@ In this paper, we are concerned with RBNS/IBNER, but not IBNR, claims, due to li
 
 \subsection{Bayesian Inference on Neural Networks} \label{section:bnn}
 
-In this section, we briefly discuss Bayesian inference on neural networks, following the discourse in \cite{graves2011practical} and \cite{blundell2015weight}.
+In this section, we briefly discuss Bayesian inference on neural networks, following the discourse in \cite{graves2011practical} and \cite{blundell2015weight}. We remark that in this subsection and the next, we discuss Bayesian inference and mixture density networks in general, and provide details on our specific choices of distributions later on in the paper.
 
 Consider a neural network parameterized by weights $w$ that takes input $x$ and returns output $y$. We can view this general formulation as a probabilistic model $P(y|x, w)$; as an example, in the case of linear regression where $y \in \mathbb{R}$, mean squared loss is specified, and constant variance is assumed, $P(y|x, w)$ corresponds to a Gaussian distribution.
 
-Rather than treating $w$ as a point estimate, we assume that it is a random variable with some prior distribution $P(w)$. The task is then to compute the posterior distribution $P(w|x, y)$ given the training data. We can then calculate the predictive distribution $P(y^*|x^*) = \mathbb{E}_{P(w|x, y)}[P(y^*|x^*, w)]$, where $x^*$ is a new data point to be scored and $Y^*$ the corresponding unknown response. However, the challenge is that $P(w|x, y)$ is intractable for any nontrivial neural network. Variational inference provides a workaround to this problem by approximating the posterior with a more tractable distribution $q(w|\theta)$ and formulates an optimization problem to find the parameters $\theta$. Specifically, we minimize the Kullback-Leibler (KL) divergence from the true posterior distribution $P$ to the approximate distribution $q$:
+Rather than treating $w$ as a point estimate, we assume that it is a random variable with some prior distribution $P(w)$. The task is then to compute the posterior distribution $P(w|x, y)$ given the training data. We can then calculate the predictive distribution $P(y^*|x^*) = \mathbb{E}_{P(w|x, y)}[P(y^*|x^*, w)]$, where $x^*$ is a new data point to be scored and $Y^*$ the corresponding unknown response. However, the challenge is that $P(w|x, y)$ is intractable for any nontrivial neural network. Variational inference provides a workaround to this problem by approximating the posterior with a more tractable distribution $q(w|\theta)$ and formulates an optimization problem to find the parameters $\theta$. Here, $q$ is typically chosen from the mean-field family, i.e.  Specifically, we minimize the Kullback-Leibler (KL) divergence from the true posterior distribution $P$ to the approximate distribution $q$:
 
 \begin{align}
-    \theta^* &= \arg \min_\theta D_{KL}(q(w|\theta) \Vert P(w|x, y))\\
-             &= \arg \min_\theta \int q(w|\theta) \log \frac{q(w|\theta)}{P(w)P(x, y|w)} dw\\
-             &= \arg \min_\theta D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(x, y|w)]. \label{eq:1}
+    \theta^* &= \arg \min_\theta D_{KL}(q(w|\theta) \Vert P(w|\mathcal{D}))\\
+             &= \arg \min_\theta \int q(w|\theta) \log \frac{q(w|\theta)}{P(w)P(\mathcal{D}|w)} dw\\
+             &= \arg \min_\theta D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(\mathcal{D}|w)]. \label{eq:1}
 \end{align}
 
-In the above, the KL divergence $D_{KL}$ is defined in general for probability distributions $Q$ to $P$ as
+In the above, we denote $\mathcal{D} = (x_i, y_i)_i$ to be the training dataset, and the KL divergence $D_{KL}$ is defined in general for probability distributions $Q$ to $P$ as
 
 \begin{equation}
     D_{KL}(Q \Vert P) = \int q(x) \log \frac{q(x)}{p(x)} dx.
@@ -117,16 +117,22 @@ In the above, the KL divergence $D_{KL}$ is defined in general for probability d
 Equation \ref{eq:1} then gives us the optimization objective,
 
 \begin{equation}
-    \mathcal{F}(\theta) = D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(x, y|w)],
+    \mathcal{F}(\mathcal{D}, \theta) = D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(\mathcal{D}|w)],
 \end{equation}
 
-which is also known as the \textit{variational free energy}. In practice, during training, we use the empirical approximation
+which is also known as the \textit{variational free energy}. In practice, during training, where $\mathcal{D}$ is randomly split into $M$ mini-batches $\mathcal{D}_1,\dots,\mathcal{D}_M$, we compute $\mathcal{F}(\mathcal{D}, \theta) = \sum_1^M \mathcal{F}_i(\mathcal{D}_i, \theta)$, where
 
 \begin{equation}
-    \mathcal{F}(\theta) \approx \frac{1}{N} \sum_{i=1}^N [\log q(w^{(i)}|\theta) - \log P(w^{(i)}) - \log P(x, y|w^{(i)})],
+    \mathcal{F}_i(\mathcal{D}_i, \theta) = \frac{1}{M}D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(\mathcal{D}_i|w)],
 \end{equation}
 
-where the $w^{(i)}$ are Monte Carlo draws from $q(w|\theta)$.
+which we approximate with
+
+\begin{equation}
+    \mathcal{F}_i(\mathcal{D}_i, \theta) \approx \sum_{j=1}^{n^{(m)}} \log q(w^{(j)}|\theta) - \log P(w^{(j)}) - \log P(\mathcal{D}_i|w^{(j)}),
+\end{equation}
+
+where the $w^{(j)}$ are sampled independently from $q(w|\theta)$ and $n^{(m)}$ denotes the number of samples in batch $m$. In other words, we sample from the weights distribution just once for each training sample.
 
 \subsection{Mixture Density Networks}
 
