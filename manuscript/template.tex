@@ -54,19 +54,19 @@ We introduce an individual claims forecasting framework utilizing Bayesian mixtu
 
 \section{Introduction}
 
-Individual claims reserving has garnered increasing interest in recent years. While the main benefit cited for performing reserving at the claim level over aggregate loss triangle approaches, such as chain ladder and Bornhuetter-Ferguson, is potential improvement in predictive accuracy, especially in environments with changing portfolio mix \cite{boumezoued2017individual}, there are additional practical advantages to forecasting individual claim behavior. These include being able to obtain updated views of portfolio risk as claims are reported and optimize adjuster resource allocation based on severity predictions. Although the benefits of individual claims modeling are promising, it has not yet achieved widespread adoption in practice. One potential contributing reason for the lack of adoption, we hypothesize, is the absence of a modeling framework that contains features important to practitioners. We suggest that an effective loss reserves modeling framework should be able to:
+Individual claims reserving has garnered increasing interest in recent years. While the main benefit cited for performing reserving at the claim level over aggregate loss triangle approaches, such as chain ladder and Bornhuetter-Ferguson, is potential improvement in predictive accuracy, especially in environments with changing portfolio mix \cite{boumezoued2017individual}, there are additional practical advantages to forecasting individual claim behavior. These include being able to obtain updated views of portfolio risk as claims are reported and optimize adjuster resource allocation based on severity predictions. Although the benefits of individual claims modeling are promising, it has not yet achieved widespread adoption in practice. One contributing reason for the lack of adoption, we hypothesize, is the absence of a modeling framework with features important to practitioners. We suggest that an effective loss reserves modeling framework should be able to:
 
 \begin{itemize}
 	\item Incorporate arbitrary claims information as predictors,
-	\item Produce multi-period forecasts, and
-	\item Sample different realizations of future payment patterns.
+	\item Produce multi-period forecasts that are sufficiently stable over time, and
+	\item Sample different realizations of future payment patterns that encompass both process uncertainty and model risk.
 \end{itemize}
-Companies are capturing increasingly diverse data, such as unstructured text from claims adjusters' notes and photographs of damages uploaded by claimants, that can potentially be predictive. Timing of cash flows and being able to sample from different future states have both business decision making and regulatory applications. A subjective criterion not listed above, which may affect adoption of an approach, is that the models should be implementable without the need for extensive bespoke feature engineering or specification of complex assumptions for underlying stochastic processes.
+Companies are capturing increasingly diverse data, such as unstructured text from claims adjusters' notes and photographs of damages, that can potentially be predictive. Timing of cash flows and being able to sample from different future states have both business decision making and regulatory applications. A desirable characteristic of the forecasts is that they are stable over time, as management is averse to volatility in loss reserves figures from one accounting period to the next. A subjective criterion not listed above, which may affect adoption of an approach, is that the models should be implementable without the need for extensive bespoke feature engineering or specification of complex assumptions for underlying stochastic processes.
 
-In this work, we propose an extensible individual claims forecasting framework towards satisfying the above criteria that utilizes ideas from Bayesian neural networks (BNN) \cite{Neal:1996:BLN:525544} and mixture density networks (MDN) \cite{bishop1994mixture}. Concretely, our contributions are:
+To the best of our knowledge, no existing loss reserving framework implements all of the above features. In this paper, we propose an extensible individual claims forecasting framework towards satisfying many of these criteria utilizing ideas from Bayesian neural networks (BNN) \cite{Neal:1996:BLN:525544} and mixture density networks (MDN) \cite{bishop1994mixture}. Concretely, our contributions are:
 
 \begin{itemize}
-	\item Development of a individual claims forecasting framework based on Bayesian Mixture Density Networks (BMDN.)
+	\item Development of a individual claims forecasting framework based on Bayesian Mixture Density Networks (BMDN).
 	\item Implementation of the proposed framework using publicly available claims-level data, which provides a baseline for future work to compare against.
 \end{itemize}
 
