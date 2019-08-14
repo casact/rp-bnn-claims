@@ -21,8 +21,8 @@
 
 \author{
   Kevin Kuo \\
-  RStudio, Kasa AI\\
-  \texttt{kevinykuo@gmail.com} \\
+  Kasa AI\\
+  \texttt{kevin@kasa.ai} \\
   %% examples of more authors
   %% \AND
   %% Coauthor \\
@@ -125,16 +125,16 @@ Equation \ref{eq:1} then gives us the optimization objective,
 which is also known as the \textit{variational free energy}. In practice, during training, where $\mathcal{D}$ is randomly split into $M$ mini-batches $\mathcal{D}_1,\dots,\mathcal{D}_M$, we compute $\mathcal{F}(\mathcal{D}, \theta) = \sum_1^M \mathcal{F}_i(\mathcal{D}_i, \theta)$, where
 
 \begin{equation}
-    \mathcal{F}_i(\mathcal{D}_i, \theta) = \frac{1}{M}D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(\mathcal{D}_i|w)],
+    \mathcal{F}_i(\mathcal{D}_i, \theta) = \frac{|\mathcal{D}_i|}{|\mathcal{D}|}D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(\mathcal{D}_i|w)],
 \end{equation}
 
 which we approximate with
 
 \begin{equation}
-    \mathcal{F}_i(\mathcal{D}_i, \theta) \approx \sum_{j=1}^{n^{(m)}} \log q(w^{(j)}|\theta) - \log P(w^{(j)}) - \log P(\mathcal{D}_i|w^{(j)}),
+    \mathcal{F}_i(\mathcal{D}_i, \theta) \approx \sum_{j=1}^{|\mathcal{D}_i|} \frac{1}{|\mathcal{D}|} ( \log q(w^{(j)}|\theta) - \log P(w^{(j)}) ) - \log P(\mathcal{D}_i|w^{(j)}),
 \end{equation}
 
-where the $w^{(j)}$ are sampled independently from $q(w|\theta)$ and $n^{(m)}$ denotes the number of samples in batch $m$. In other words, we sample from the weights distribution just once for each training sample.
+where the $w^{(j)}$ are sampled independently from $q(w|\theta)$. In other words, we sample from the weights distribution just once for each training sample.
 
 \subsection{Mixture Density Networks}\label{section:mdn}
 
@@ -152,7 +152,7 @@ We emphasize now the difference between the uncertainty captured by specifying a
 
 \section{Data and Model}
 
-In this section, we describe the data used for our experiments and the proposed model. The dataset used and relevant code are available on GitHub\footnote{\url{https://github.com/kasaai/bnn-claims}}.
+In this section, we describe the data used for our experiments and the proposed model. The dataset used and relevant code are available on GitHub\footnote{\url{https://github.com/kasaai/bnn-claims}}. The experiments are implemented using the R programming language \cite{r2018} and TensorFlow \cite{tensorflow2015-whitepaper}.
 
 \subsection{Data}
 
@@ -170,7 +170,7 @@ We first simulate approximately 500,000\footnote{The number of claims generated 
 
 where $X$, $(C_i)$, and $(S_i)$ denote the static claim features, incremental cash flow sequences, and claim status sequences, respectively, and $j$ indexes the claims.
 
-To create the training and testing sets, we select year 2005 as the evaluation year cutoff. For the training set, any cash flow information available after the 2005 is removed. In symbols, we have
+To create the training and testing sets, we select year 2005 as the evaluation year cutoff. For the training set, any cash flow information available after  2005 is removed. In symbols, we have
 
 \begin{equation}
     \mathcal{D}_{\text{train}} = \{ (X^{(j)}, (C_i^{(j)}), (S_i^{(j)})): i + \text{AY}^{(j)} \leq 2005, j \in {1,\dots, N}\},
@@ -180,7 +180,7 @@ where $\text{AY}^{(j)}$ denotes the accident year associated with claim $j$.
 For each claim in the training set, we create a training sample for each time period after develpoment year 0. The response variable consists of cash flow information available as of the end of each time period until the evaluation year cutoff, and predictors are derived from information available before the time period. For a claim $j$, we have the following input-output pairs:
 
 \begin{equation}\label{eq:training-samples}
-    \{((X^{(j)}, (C_0^({j}), \dots, C_i^{(j)}, (S_0^{(j)}, \dots, S_i^{(j)}), (C_{i+1}^{(j)}, \dots, C_{k^{(j)}}^{(j)}): i = 0, \dots, k^{(j)} - 1\},
+    \{((X^{(j)}, (C_0^{(j)}, \dots, C_i^{(j)}), (S_0^{(j)}, \dots, S_i^{(j)})), (C_{i+1}^{(j)}, \dots, C_{k^{(j)}}^{(j)})): i = 0, \dots, k^{(j)} - 1\},
 \end{equation}
 
 where $k^{(j)}$ denotes the latest development year for which data is available for claim $j$ in the training set. As an example, if a claim has an accident year of 2000, five training samples are created. The first training sample has cash flows from 2001 to 2005 for the response and one cash flow value from 2000 for the predictor, while the last training sample has only the cash flow in year 2005 for the response and cash flows from 2000 to 2004 for the predictor.
@@ -199,7 +199,7 @@ Development year is defined as the number of years since the accident occurred. 
 
 The static claim characteristic variables include age, line of business, occupation of the claimant, and the injured body part. Of these, age is numeric while the others are categorical. We center and scale the age variable and integer-index the others, which are fed into embedding layers \cite{guo2016entity}, discussed in the next section.
 
-As noted in the previous section, the response variable and the sequence predictors can have different lengths (in terms of time steps) from one sample to the next. To facilitate computation, we pre-pad and post-pad the sequences with a predetermined masking value (we use -99999) so that all sequences have a fixed length of 11.
+As noted in the previous section, the response variable and the sequence predictors can have different lengths (in terms of time steps) from one sample to the next. To facilitate computation, we pre-pad and post-pad the sequences with a predetermined masking value (we use 99999) so that all sequences have a fixed length of 11.
 
 \begin{table}[ht]
 \centering
@@ -278,7 +278,7 @@ We now describe the components of \ref{eq:fx}. First,
     w_i = \frac{e^{v_i}}{e^{v_1} + e^{v_2}}\quad (i = 1, 2)
 \end{equation}
 
-are the normalized mixing weights. $P(x; \mu, \sigma^2)$ denotes the distribution function for a log-normal distribution with location and scale parameters $\mu$ and $\sigma$, respectively, shifted to the left by 0.001 to accommodate zeros in the data. In other words, if $X ~ LN(\mu, \sigma^2)$, then $X - 0.001 ~ P$. This modification is necessary because we have zero cash flows in the response sequences, and computing the likelihood becomes problematic since the support of the log-normal distribution does not contain zero.
+are the normalized mixing weights. $P(x; \mu, \sigma^2)$ denotes the distribution function for a log-normal distribution with location and scale parameters $\mu$ and $\sigma$, respectively, shifted to the left by 0.001 to accommodate zeros in the data. In other words, if $X \sim LN(\mu, \sigma^2)$, then $X - 0.001 \sim P$. This modification is necessary because we have zero cash flows in the response sequences, and computing the likelihood becomes problematic since the support of the log-normal distribution does not contain zero.
 
 \begin{equation}
     F_{0}(x)=\left\{\begin{matrix} 1, & \mbox{if }x\ge 0 \\ 0, & \mbox{if }x<0 \end{matrix}\right.
@@ -296,7 +296,7 @@ The net loss prediction for each development year is then the difference of the 
 
 \subsubsection{Loss Function}\label{sec:loss-function}
 
-We calculate the log-likelihood loss for each output by computing the log probability of the true labels with respect to the output distributions. As mentioned in Section \ref{sec:fe}, the output sequences may contain masking values that need to be adjusted. Specifically, we marginalize out the components with the masking values. Formally, for a given training sample, let $M$ denote the masking constant, $Y=(Y_1,\dots,Y_{11})$ denote the output sequence, $Y_{\mathcal{T}_M} = (Y_i: Y_i = M)$, and, abusing notation, also let $\mathcal{T}_M = \{i: Y_i = M\}$. Then,
+We calculate the log-likelihood loss for each output by computing the log probability of the true labels with respect to the output distributions. As mentioned in Section \ref{sec:fe}, the output sequences may contain masking values that need to be adjusted. Specifically, we marginalize out the components with the masking values. Formally, for a given training sample, let $M$ denote the masking constant, $Y=(Y_1,\dots,Y_{11})$ denote a single output sequence, $Y_{\mathcal{T}_M} = (Y_i: Y_i = M)$, and, abusing notation, also let $\mathcal{T}_M = \{i: Y_i = M\}$. Then,
 
 \begin{align}
     f_{Y\setminus Y_{\mathcal{T}_M}}(Y) &= \int_{Y_{\mathcal{T}_M}} f(Y) dY_{\mathcal{T}_M}\\
@@ -306,7 +306,7 @@ We calculate the log-likelihood loss for each output by computing the log probab
          &= \prod_{i \notin \mathcal{T}_M} f_{Y_i}(Y_i) \quad \text{(by independence)}.
 \end{align}
 
-The adjusted log-likelihood then becomes
+The adjusted log-likelihood for a single training sample then becomes
 
 \begin{align}
     \log\mathcal{L}(Y) &= \log  f_{Y\setminus Y_{\mathcal{T}_M}}(Y)\\
@@ -316,7 +316,13 @@ The adjusted log-likelihood then becomes
 
 where $T$ is $\min \mathcal{T}_M - 1$ if $\mathcal{T}_M$ is nonempty and 11 otherwise.
 
-Hence, the log-likelihood associated with a training sample is the sum of the log probabilities of the non-masked elements. The negative log-likelihood, summed with the KL term associated with the variational layers, comprise the total network loss for optimization.
+Hence, the log-likelihood associated with a training sample is the sum of the log probabilities of the non-masked elements. The negative log-likelihood, summed with the KL term associated with the variational layers, discussed in Section  \ref{section:bnn}, comprise the total network loss for optimization. The contribution of a single training sample to the loss is then
+
+\begin{equation}
+    \sum_{i = 1}^{T}\log f_{Y_i}(Y_i) + \frac{1}{|\mathcal{D}|}\sum_{k=1}^2D_{KL}(q_k(w_k|\theta_k) \Vert P_k(w_k)),
+\end{equation}
+
+where $k=1, 2$ correspond to variational layers for parameterizing the paid loss and recovery distributions, respectively.
 
 \subsubsection{Training and Scoring}
 
@@ -324,7 +330,7 @@ We use a random subset of the training set consisting of 5\% of the records as t
 
 To forecast an individual claim, we construct a scoring data point by using all data available to us as of the evaluation date cutoff. In other words, the last elements of the predictor cash flow sequences correspond to the actual value from the cutoff year. Hence, in the output sequence, the first element corresponds to the prediction of the cash flow distribution of the year after the cutoff.
 
-Recall that our model weights are a random variable, so each time we score a new data point, we are sampling from the distribution of model weights and expect to obtain different parameters for the distributions of cash flows. The output distributions themselves are also stochastic and can be sampled from. Following \cite{NIPS2017_7141}, we refer to the former variability as \textit{epistemic} uncertainty and the latter as \textit{aleatoric} uncertainty. Epistemic uncertainty reflects uncertainty about our model which can be reduced given more training data, while aleatoric uncertainty reflects the irreducible noise in the observations.
+Recall that our model weights are a random variable, so each time we score a new data point, we are sampling from the distribution of model weights and expect to obtain different parameters for the distributions of cash flows. The output distributions themselves are also stochastic and can be sampled from. Following \cite{NIPS2017_7141}, we refer to the former variability as \textit{epistemic} uncertainty and the latter as \textit{aleatoric} uncertainty. Epistemic uncertainty reflects uncertainty about our model which can be reduced given more training data, while aleatoric uncertainty reflects the irreducible noise in the observations. In actuarial science literature, these concepts are also known as parameter estimation uncertainty and process uncertainty, respectively \cite{wuthrich2017non}.
 
 Generating a distribution of future paths of cash flows amounts to repeating the procedure of drawing a model from its distribution, calculating the output distribution parameters using the drawn model, then drawing a sample of cash flows from the distribution. Since we decompose the cash flows into paid losses and recoveries, we can obtain net amounts by subtracting the generated recoveries from the generated paid losses.
 
@@ -332,7 +338,7 @@ If we were only interested in point estimates, we can avoid sampling the output 
 
 \section {Results and Discussion}
 
-We evaluate our modeling framework by qualitatively inspecting samples paths generated for an individual claim and also comparing the aggregate estimate of unpaid claims with a chain ladder estimate. We note that, to the best of our knowledge, prior to the current paper, there is not a benchmark for individual claims forecasts. We also discuss the extensibility of our approach to accommodate company specific data elements and expert knowledge. The experiments are implemented using the R programming language \cite{r2018} and TensorFlow \cite{tensorflow2015-whitepaper}.
+We evaluate our modeling framework by qualitatively inspecting samples paths generated for an individual claim and also comparing the aggregate estimate of unpaid claims with a chain ladder estimate. We note that, to the best of our knowledge, prior to the current paper, there is not a benchmark for individual claims forecasts. We also discuss the extensibility of our approach to accommodate company specific data elements and expert knowledge.
 
 \subsection{Individual Claim Forecasts}
 
@@ -360,7 +366,7 @@ In Figure \ref{fig:claim_paths} we show plausible future developments of the cla
 
 To compute a point estimate for the total unpaid losses, we score each claim once (i.e. sample from the weights distribution once) to obtain a distribution for each time step for paid losses and recoveries. We then compute the means of the paid loss and recovery distributions and take the differences to obtain the net cash flow amount. The final unpaid loss estimate is then the sum of all the net amounts up to and including development year 11. Since there is randomness in the neural network weight initialization, we instantiate and train the model 10 times, and take the average of the predicted future paid losses across the 10-model ensemble. In practice, one could distribute the prediction procedure over a computing cluster and draw more samples for an even more stable estimate.
 
-For the chain ladder development method benchmark, we calculate ultimate losses using all-year weighted age-to-age factors, then subtract the already paid amounts to arrive at the unpaid estimate. The unpaid amounts from the two approaches are then compared to the actual unpaid amounts. The results are shown in Table \ref{table:results}.
+For the chain ladder development method benchmark, we aggregate the data into a report year triangle (to exclude IBNR), calculate ultimate losses using all-year weighted age-to-age factors, then subtract the already paid amounts to arrive at the unpaid estimate. The unpaid amounts from the two approaches are then compared to the actual unpaid amounts. The results are shown in Table \ref{table:results}.
 
 \begin{table}[ht]
 \centering
@@ -369,7 +375,7 @@ For the chain ladder development method benchmark, we calculate ultimate losses 
 Model & Forecast & Error\\
 \midrule
 Actual                                & 109,216,388  & --\\
-Chain Ladder                          & 116,105,216  & $+6.31\%$\\
+Chain Ladder                          & 116,105,216  & $-1.08\%$\\
 Ours (10-Model Ensemble)              & 102,502,710  & $-6.15\%$\\
 \bottomrule\\[1ex]
 \end{tabular}
@@ -391,11 +397,7 @@ We have introduced a framework for individual claims forecasting that can be uti
 
 There are a few potential avenues for enhancements and extensions, including: larger scale simulations to evaluate the quality of uncertainty estimates, evaluating against new datasets, and relaxing simplifying assumptions such as the independence of time steps to obtain more internally consistent forecasts. One main limitation of the proposed approach and experiments is that we focus on reported claims only. With access to policy level data, a particular interesting direction of research would be to extend the approach to also estimate IBNR claims.
 
-\section{Acknowledgments}
-
-(TODO)
-
-\bibliographystyle{unsrt}  
+\bibliographystyle{ieeetr}  
 \bibliography{ref}  %%% Remove comment to use the external .bib file (using bibtex).
 %%% and comment out the ``thebibliography'' section.
 
