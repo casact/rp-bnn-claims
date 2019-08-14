@@ -24,6 +24,15 @@ make_series <- function(v, start_offset, end_offset, na_pad = 99999) {
 }
 
 compute_mack_ultimate <- function(df, claim_ids) {
+  # Make adjustment to use report year
+  df <- df %>%
+    mutate(
+      year = year - (report_year - AY),
+      AY = report_year,
+    ) %>% 
+    # These records account for 0 paid losses
+    filter(year >= 0)
+  
   triangle_data <- df %>%
     group_by(AY, year) %>%
     summarize(paid = sum(Pay)) %>%
