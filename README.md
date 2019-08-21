@@ -8,7 +8,7 @@ Repository for the paper "Individual Claims Forecasting with Bayesian Mixture De
 
 ## Dependencies
 
-To install the necessary dependencies, install the latest dev version of renv using
+(GPU only) To install the necessary dependencies, install the latest dev version of renv using
 
 ```r
 remotes::install_github("rstudio/renv")
