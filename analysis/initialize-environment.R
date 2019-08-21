@@ -1,4 +1,4 @@
-reticulate::use_virtualenv("~/tf2", required = TRUE)
+renv::use_python()
 library(keras)
 library(tensorflow)
 library(tfprobability)
