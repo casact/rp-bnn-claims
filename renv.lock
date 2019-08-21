@@ -11,6 +11,10 @@
       }
     ]
   },
+  "Python": {
+    "Version": "3.6.8",
+    "Type": "virtualenv"
+  },
   "Packages": {
     "BH": {
       "Package": "BH",
@@ -32,9 +36,9 @@
     },
     "MASS": {
       "Package": "MASS",
-      "Version": "7.3-51.4",
+      "Version": "7.3-51.1",
       "Source": "CRAN",
-      "Hash": "a489ad42493fa9bfac8f3e3a3bc7d4ca"
+      "Hash": "fc6c7c0937316e0fe109826974d25c0b"
     },
     "Matrix": {
       "Package": "Matrix",
@@ -59,12 +63,6 @@
       "Version": "1.0.2",
       "Source": "CRAN",
       "Hash": "c25fa7d5684fa7001ddfea3755243975"
-    },
-    "RcppRoll": {
-      "Package": "RcppRoll",
-      "Version": "0.3.0",
-      "Source": "CRAN",
-      "Hash": "2f4288aac396712ebeec16ff660a42a9"
     },
     "SQUAREM": {
       "Package": "SQUAREM",
@@ -278,15 +276,9 @@
     },
     "keras": {
       "Package": "keras",
-      "Version": "2.2.4.1.9001",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "keras",
-      "RemoteUsername": "rstudio",
-      "RemoteRef": "master",
-      "RemoteSha": "425e13ba115d5cbb16d88bd91ee2ba775254ce64",
-      "Hash": "71673fe001558c7b927947edf7c219c6"
+      "Version": "2.2.4.1",
+      "Source": "CRAN",
+      "Hash": "9c716427d01784f19dd98b2a2dfe110b"
     },
     "knitr": {
       "Package": "knitr",
@@ -362,9 +354,9 @@
     },
     "nlme": {
       "Package": "nlme",
-      "Version": "3.1-141",
+      "Version": "3.1-140",
       "Source": "CRAN",
-      "Hash": "be8db89838a17117a4083e72350443e0"
+      "Hash": "ad3b02c6f154deac3584133e6e015cd3"
     },
     "nnet": {
       "Package": "nnet",
@@ -458,15 +450,9 @@
     },
     "recipes": {
       "Package": "recipes",
-      "Version": "0.1.5.9000",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "recipes",
-      "RemoteUsername": "tidymodels",
-      "RemoteRef": "master",
-      "RemoteSha": "6e27280da4d3f6c84eba4c3a313296e1d86e135f",
-      "Hash": "95c708b50582f8b2fe89c0d0ccecd5dd"
+      "Version": "0.1.6",
+      "Source": "CRAN",
+      "Hash": "a41cf8f8490a18f93c1b797b3f0610ea"
     },
     "rematch": {
       "Package": "rematch",
@@ -488,9 +474,15 @@
     },
     "reticulate": {
       "Package": "reticulate",
-      "Version": "1.13",
-      "Source": "CRAN",
-      "Hash": "a083b977df80dcb6ef64d2b623edff22"
+      "Version": "1.13.0-9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "reticulate",
+      "RemoteUsername": "rstudio",
+      "RemoteRef": "master",
+      "RemoteSha": "96421b5c6336af56bd858596f1f93df0286de40d",
+      "Hash": "e8fcfb9e41aabed9f8ef34c89aabe75c"
     },
     "rlang": {
       "Package": "rlang",
@@ -548,9 +540,9 @@
     },
     "survival": {
       "Package": "survival",
-      "Version": "2.44-1.1",
+      "Version": "2.43-3",
       "Source": "CRAN",
-      "Hash": "20bdedb74dc2c866f51e4ec9133480b1"
+      "Hash": "5beae997b1049d108c48bfa218c527da"
     },
     "sys": {
       "Package": "sys",
@@ -568,26 +560,27 @@
       "Package": "tfdatasets",
       "Version": "1.13.1.9000",
       "Source": "GitHub",
-      "Remotes": "rstudio/keras",
+      "Remotes": "rstudio/keras, rstudio/reticulate",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "tfdatasets",
       "RemoteUsername": "rstudio",
       "RemoteRef": "master",
-      "RemoteSha": "2e5b99f4748a3a7501633cff5311d4f63b75cb7b",
-      "Hash": "882bbc7eec9275bf411365c96ccc7686"
+      "RemoteSha": "0b1acabcd8891b09b33dcf5b3299d56660b72693",
+      "Hash": "aca61ecbf9296faa9a0e3a5383e29d69"
     },
     "tfprobability": {
       "Package": "tfprobability",
       "Version": "0.7.0.0",
       "Source": "GitHub",
+      "Remotes": "rstudio/reticulate",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "tfprobability",
       "RemoteUsername": "rstudio",
       "RemoteRef": "master",
-      "RemoteSha": "c731263311b84b8396d6e504aac9c84de2c5aa00",
-      "Hash": "e5db458223728ccf9c27aaeae533736c"
+      "RemoteSha": "42406799ea12f8cc0f3f85775a74eed405fd436c",
+      "Hash": "187f9e4156f93280b117c440a9239d98"
     },
     "tfruns": {
       "Package": "tfruns",
@@ -685,9 +678,5 @@
       "Source": "CRAN",
       "Hash": "45d65588b02d47970fc84adecb2ee664"
     }
-  },
-  "Python": {
-    "Version": "3.6.7",
-    "Type": "virtualenv"
   }
 }
