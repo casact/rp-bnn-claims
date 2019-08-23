@@ -6,3 +6,12 @@
 
 Repository for the paper "Individual Claims Forecasting with Bayesian Mixture Density Networks." This work is supported by the Casualty Actuarial Society.
 
+## Dependencies
+
+(GPU only) To install the necessary dependencies, install the latest dev version of renv using
+
+```r
+remotes::install_github("rstudio/renv")
+```
+
+then run `renv::restore()`.
