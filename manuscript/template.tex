@@ -197,7 +197,7 @@ Claim status indicator, which is a scalar value of 0 or 1, is one-hot encoded; f
 
 Development year is defined as the number of years since the accident occurred. It is then scaled to $[0, 1]$.
 
-The static claim characteristic variables include age, line of business, occupation of the claimant, and the injured body part. Of these, age is numeric while the others are categorical. We center and scale the age variable and integer-index the others, which are fed into embedding layers \cite{guo2016entity}, discussed in the next section.
+The static claim characteristic variables include age, line of business, occupation of the claimant, and the injured body part. Of these, age is numeric while the others are categorical. We center and scale the age variable and integer-index the others, which are fed into embedding layers \cite{guoEntityEmbeddings2016}, discussed in the next section.
 
 As noted in the previous section, the response variable and the sequence predictors can have different lengths (in terms of time steps) from one sample to the next. To facilitate computation, we pre-pad and post-pad the sequences with a predetermined masking value (we use 99999) so that all sequences have a fixed length of 11.
 
