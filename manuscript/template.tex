@@ -63,7 +63,13 @@ Individual claims reserving has garnered increasing interest in recent years. Wh
 \end{itemize}
 Companies are capturing increasingly diverse data, such as unstructured text from claims adjusters' notes and photographs of damages, that can potentially be predictive. Timing of cash flows and being able to sample from different future states have both business decision making and regulatory applications. A desirable characteristic of the forecasts is that they are stable over time, as management is averse to volatility in loss reserves figures from one accounting period to the next. A subjective criterion not listed above, which may affect adoption of an approach, is that the models should be implementable without the need for extensive bespoke feature engineering or specification of complex assumptions for underlying stochastic processes.
 
-To the best of our knowledge, no existing loss reserving framework implements all of the above features. In this paper, we propose an extensible individual claims forecasting framework towards satisfying many of these criteria utilizing ideas from Bayesian neural networks (BNN) \cite{nealBayesianLearning2012} and mixture density networks (MDN) \cite{bishopMixtureDensity1994}. Concretely, our contributions are:
+To the best of our knowledge, no existing loss reserving framework implements all of the above features. In this paper, we propose an extensible individual claims forecasting framework towards satisfying many of these criteria utilizing ideas from Bayesian neural networks (BNN) \cite{nealBayesianLearning2012} and mixture density networks (MDN) \cite{bishopMixtureDensity1994}. While we discuss these concepts in detail later in the paper, at a high level,
+
+\begin{itemize}
+  \item BNNs are non-linear supervised learning models that capture complex interactions among inputs, with prior distributions on model parameters; and
+  \item MDN MDNs are mixture models for conditional densities, where the mixture model parameters are the outputs of the neural network.
+\end{itemize}
+Concretely, our contributions are:
 
 \begin{itemize}
 	\item Development of a individual claims forecasting framework based on Bayesian Mixture Density Networks (BMDN).
