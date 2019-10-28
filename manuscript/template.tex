@@ -208,7 +208,7 @@ $P(y|x, w)$ corresponds to a Gaussian distribution.
 Rather than treating $w$ as a fixed unknown parameter, we adapt a Bayesian
 perspective and treat $w$ as a random variable with some prior distribution 
 $P(w)$. The task is then to compute the posterior distribution $P(w|x, y)$ given
-the training data. We can then calculate the predictive distribution
+the training data. We can then calculate the posterior predictive distribution
 $P(y^*|x^*) = \mathbb{E}_{P(w|x, y)}[P(y^*|x^*, w)]$, where $x^*$ is a new data
 point to be scored and $Y^*$ the corresponding unknown response. However, the 
 challenge is that $P(w|x, y)$ is intractable for any nontrivial neural network.
