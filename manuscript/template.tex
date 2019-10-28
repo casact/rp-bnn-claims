@@ -210,8 +210,10 @@ perspective and treat $w$ as a random variable with some prior distribution
 $P(w)$. The task is then to compute the posterior distribution $P(w|x, y)$ given
 the training data. We can then calculate the posterior predictive distribution
 $P(y^*|x^*) = \mathbb{E}_{P(w|x, y)}[P(y^*|x^*, w)]$, where $x^*$ is a new data
-point to be scored and $Y^*$ the corresponding unknown response. However, the 
-challenge is that $P(w|x, y)$ is intractable for any nontrivial neural network.
+point to be scored and $Y^*$ the corresponding unknown response. However, 
+determining $P(w|x, y)$ analytically is intractable, and convergence of Markov
+chain Monte Carlo (MCMC) to the actual posterior for nontrivial neural networks 
+is too slow to be feasiable.
 Variational inference provides a workaround to this problem by approximating the
 posterior with a more tractable distribution $q(w|\theta)$, which is often 
 chosen to come from the mean-field family, i.e. $q(z) = \prod_i q(z_i)$, but can
