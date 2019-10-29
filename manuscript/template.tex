@@ -493,15 +493,15 @@ deeper and larger architectures.
 
 We choose Gaussians for both the prior and surrogate posterior distributions 
 over the weights of the dense layers. The prior distribution is constrained to 
-have zero mean and unit variance while for the posterior both the mean and
+have zero mean and unit variance while for the surrogate posterior both the mean and
 variance are trainable. Symbolically, if we let $w$ denote the weights 
 associated with each dense layer, we have
 
 \begin{equation}
-    w \sim \mathcal{N}(0, I) \text{ and}
+    P(w) = \mathcal{N}(0, I) \text{ and}
 \end{equation}
 \begin{equation}
-    w|\theta \sim \mathcal{N}(\mu(\theta), \sigma(\theta)),
+    q(w|\theta) = \mathcal{N}(\mu(\theta), \sigma(\theta)),
 \end{equation}
 
 where $\theta$ represent trainable parameters. The KL term associated with
