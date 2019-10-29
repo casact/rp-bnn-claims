@@ -536,7 +536,8 @@ accommodate zeros in the data. In other words, if $Y \sim LN(\mu, \sigma^2)$,
 then $Y - 0.001 \sim P$. This modification is necessary because we have zero 
 cash flows in the response sequences, and computing the likelihood becomes
 problematic since the support of the log-normal distribution does not contain
-zero.
+zero\footnote{As of the writing of this paper, TensorFlow Probability attempts
+to evaluate all terms in the likelihood of the mixture.}.
 
 \begin{equation}
     F_{0}(y)=\left\{\begin{matrix} 1, & \mbox{if }y\ge 0 \\ 0, & \mbox{if }y<0 \end{matrix}\right.
