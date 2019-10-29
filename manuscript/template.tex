@@ -520,7 +520,7 @@ preceding dense variational layer, we have the following as the distribution
 function:
 
 \begin{equation} \label{eq:fx}
-    F(x) = w_1(v_1, v_2)P(x; v_3, (\alpha + \lambda\sigma(\beta v_4))^2) + w_2(v_1, v_2)F_0(x).
+    F(y) = w_1(v_1, v_2)P(y; v_3, (\alpha + \lambda\sigma(\beta v_4))^2) + w_2(v_1, v_2)F_0(y).
 \end{equation}
 
 We now describe the components of \ref{eq:fx}. First, 
@@ -529,17 +529,17 @@ We now describe the components of \ref{eq:fx}. First,
     w_i = \frac{e^{v_i}}{e^{v_1} + e^{v_2}}\quad (i = 1, 2)
 \end{equation}
 
-are the normalized mixing weights. $P(x; \mu, \sigma^2)$ denotes the 
+are the normalized mixing weights. $P(y; \mu, \sigma^2)$ denotes the 
 distribution function for a log-normal distribution with location and scale 
 parameters $\mu$ and $\sigma$, respectively, shifted to the left by 0.001 to 
-accommodate zeros in the data. In other words, if $X \sim LN(\mu, \sigma^2)$, 
-then $X - 0.001 \sim P$. This modification is necessary because we have zero 
+accommodate zeros in the data. In other words, if $Y \sim LN(\mu, \sigma^2)$, 
+then $Y - 0.001 \sim P$. This modification is necessary because we have zero 
 cash flows in the response sequences, and computing the likelihood becomes
 problematic since the support of the log-normal distribution does not contain
 zero.
 
 \begin{equation}
-    F_{0}(x)=\left\{\begin{matrix} 1, & \mbox{if }x\ge 0 \\ 0, & \mbox{if }x<0 \end{matrix}\right.
+    F_{0}(y)=\left\{\begin{matrix} 1, & \mbox{if }y\ge 0 \\ 0, & \mbox{if }y<0 \end{matrix}\right.
 \end{equation}
 
 is the distribution function for the deterministic distribution, and $\sigma$ 
