@@ -299,7 +299,7 @@ while the latter reflects uncertainty in parameter estimation.
 
 In this section, we describe the data used for our experiments and the proposed
 model. The dataset used and relevant code are available on 
-GitHub\footnote{\url{https://github.com/kasaai/bnn-claims}}. The experiments are
+GitHub.\footnote{\url{https://github.com/kasaai/bnn-claims}} The experiments are
 implemented using the R programming language 
 \cite{rdevelopmentcoreteamLanguageEnvironment2011} and TensorFlow 
 \cite{tensorflow2015-whitepaper}.
@@ -379,14 +379,14 @@ We exhibit the predictors used and associated transformations in Table
 amount along with a claim open status indicator associated with it. We take the
 cash flow value and derive two variables from it: the paid loss and the 
 recovery, corresponding to the positive part and negative part of the cash flow,
-respectively. In other words, For each claim and for each time step, at most one
+respectively. In other words, for each claim and for each time step, at most one
 of paid loss and recovery can be nonzero. For predictors, both the paid losses 
 and recoveries are centered and scaled with respect to all instances of their 
 values in the training set. The response cash flow values are not normalized.
 
 Claim status indicator, which is a scalar value of 0 or 1, is one-hot encoded
-(i.e. represented using dummy variables);
-for each training sample a claim status value is available for each time step.
+(i.e., represented using dummy variables);
+for each training sample, a claim status value is available for each time step.
 
 Development year is defined as the number of years since the accident occurred. 
 It is then scaled to $[0, 1]$.
