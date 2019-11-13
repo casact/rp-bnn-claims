@@ -213,10 +213,10 @@ $P(y^*|x^*) = \mathbb{E}_{P(w|x, y)}[P(y^*|x^*, w)]$, where $x^*$ is a new data
 point to be scored and $Y^*$ the corresponding unknown response. However, 
 determining $P(w|x, y)$ analytically is intractable, and convergence of Markov
 chain Monte Carlo (MCMC) to the actual posterior for nontrivial neural networks 
-is too slow to be feasiable.
+is too slow to be feasible.
 Variational inference provides a workaround to this problem by approximating the
 posterior with a more tractable distribution $q(w|\theta)$, which is often 
-chosen to come from the mean-field family, i.e. $q(z) = \prod_i q(z_i)$, but can
+chosen to come from the mean-field family, i.e., $q(z) = \prod_i q(z_i)$, but can
 be more general \cite{blundellWeightUncertainty2015}. We then formulate an 
 optimization problem to find the parameters $\theta$. Specifically, we minimize
 the Kullback-Leibler (KL) divergence from the true posterior distribution $P$ to
@@ -238,7 +238,7 @@ Our optimization problem can then be stated as
 
 where $\mathcal{D} = (x_i, y_i)_i$ is the training dataset. We remark that, in Equation \ref{eq:2}, the $P(\mathcal{D})$ term resulting from applying Bayes' theorem to $P(w|\mathcal{D})$ disappears because it is irrelevant to the optimization.
 
-Equation \ref{eq:1} then gives us the optimization objective\footnote{We note that $-\mathcal{F}(\mathcal{D}, \theta)$ is often referred to as the evidence lower bound (ELBO) in the machine learning literature}
+Equation \ref{eq:1} then gives us the optimization objective\footnote{We note that $-\mathcal{F}(\mathcal{D}, \theta)$ is often referred to as the evidence lower bound (ELBO) in the machine learning literature.}
 
 \begin{equation}
     \mathcal{F}(\mathcal{D}, \theta) = D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(\mathcal{D}|w)].
