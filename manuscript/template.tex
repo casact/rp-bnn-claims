@@ -348,7 +348,7 @@ year cutoff. For the training set, any cash flow information available after
 where $\text{AY}^{(j)}$ denotes the accident year associated with claim $j$.
 
 For each claim in the training set, we create a training sample for each time 
-period after develpoment year 0. The response variable consists of cash flow 
+period after development year 0. The response variable consists of cash flow 
 information available as of the end of each time period until the evaluation 
 year cutoff, and predictors are derived from information available before the
 time period. For a claim $j$, we have the following input-output pairs:
@@ -472,7 +472,7 @@ and model training.
 \subsubsection{Embedding Layer}
 
 An embedding layer maps each level of a categorical variable to a fixed-length 
-vector in $n$-dimensional Euclidean space. The value of $n$ is a hyerparameter 
+vector in $n$-dimensional Euclidean space. The value of $n$ is a hyperparameter 
 chosen by the modeler; in our case we select $n = 2$ for all embedding layers, 
 which means we map each factor level to a point in $\mathbb{R}^2$. In contrast 
 to data-preprocessing dimensionality techniques such as principal component 
