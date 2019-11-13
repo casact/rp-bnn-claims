@@ -471,7 +471,7 @@ and model training.
 
 \subsubsection{Embedding Layer}
 
-An embedding layer maps each level of a categorical variable to a fixed length 
+An embedding layer maps each level of a categorical variable to a fixed-length 
 vector in $n$-dimensional Euclidean space. The value of $n$ is a hyerparameter 
 chosen by the modeler; in our case we select $n = 2$ for all embedding layers, 
 which means we map each factor level to a point in $\mathbb{R}^2$. In contrast 
@@ -505,7 +505,7 @@ associated with each dense layer, we have
     q(w|\theta) = \mathcal{N}(\mu(\theta), \sigma(\theta)),
 \end{equation}
 
-where $\theta$ represent trainable parameters. The KL term associated with
+where $\theta$ represents trainable parameters. The KL term associated with
 estimation, as described in Section \ref{section:bnn}, is added to the neural 
 network loss during optimization. The dense layers each output four units to 
 parameterize the output distributions which we discuss next.
@@ -524,7 +524,7 @@ function:
     F(y) = w_1(v_1, v_2)P(y; v_3, (\alpha + \lambda\sigma(\beta v_4))^2) + w_2(v_1, v_2)F_0(y).
 \end{equation}
 
-We now describe the components of \ref{eq:fx}. First, 
+We now describe the components of Equation \ref{eq:fx}. First, 
 
 \begin{equation}
     w_i = \frac{e^{v_i}}{e^{v_1} + e^{v_2}}\quad (i = 1, 2)
