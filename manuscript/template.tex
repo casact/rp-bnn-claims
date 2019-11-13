@@ -95,7 +95,7 @@ assumptions for underlying stochastic processes.
 
 To the best of our knowledge, no existing loss reserving framework implements 
 all of the above features. In this paper, we propose an extensible individual 
-claims forecasting framework towards satisfying many of these criteria utilizing
+claims forecasting framework towards satisfying many of these criteria, utilizing
 ideas from Bayesian neural networks (BNN) \cite{nealBayesianLearning2012} and 
 mixture density networks (MDN) \cite{bishopMixtureDensity1994}. While we discuss
 these concepts in detail later in the paper, at a high level,
@@ -109,7 +109,7 @@ these concepts in detail later in the paper, at a high level,
 Concretely, our contributions are:
 
 \begin{itemize}
-	\item Development of a individual claims forecasting framework based on 
+	\item Development of an individual claims forecasting framework based on 
 	Bayesian Mixture Density Networks (BMDN).
 	\item Implementation of the proposed framework using publicly available 
 	claims-level data, which provides a baseline for future work to compare 
@@ -118,10 +118,10 @@ Concretely, our contributions are:
 
 \section{Related Work}
 
-Claims-level reserving is a fast moving research area, and 
+Claims-level reserving is a fast-moving research area, and 
 \cite{boumezouedIndividualClaims2017} and \cite{taylorLossReserving2019} provide
 recent surveys. Many of the current works in the area utilize machine learning 
-(ML) techniques. \cite{wuthrichMachineLearning2018} introduces using machine 
+(ML) techniques. Wüthrich \cite{wuthrichMachineLearning2018} introduces using machine 
 learning algorithms to incorporate diverse claims characteristics inputs. It 
 demonstrates a simple model where regression trees are used to predict the
 number of payments, and suggests extensions such as compound modeling to predict
@@ -144,9 +144,9 @@ claims and fit separate models to each group.
 
 In formulating our framework, we also draw inspiration from machine learning 
 approaches to aggregate triangle data, including 
-\cite{gabrielliNeuralNetwork2019a, gabrielliNeuralNetwork2019} which embed a
+\cite{gabrielliNeuralNetwork2019a, gabrielliNeuralNetwork2019}, which embed a
 classical parametric loss reserving models into neural networks, and the 
-DeepTriangle \cite{kuoDeepTriangleDeep2018} framework, whose neural network 
+DeepTriangle \cite{kuo2019deeptriangle} framework, whose neural network 
 architecture we adapt for individual claims data.
 
 \section{Preliminaries}
@@ -213,10 +213,10 @@ $P(y^*|x^*) = \mathbb{E}_{P(w|x, y)}[P(y^*|x^*, w)]$, where $x^*$ is a new data
 point to be scored and $Y^*$ the corresponding unknown response. However, 
 determining $P(w|x, y)$ analytically is intractable, and convergence of Markov
 chain Monte Carlo (MCMC) to the actual posterior for nontrivial neural networks 
-is too slow to be feasiable.
+is too slow to be feasible.
 Variational inference provides a workaround to this problem by approximating the
 posterior with a more tractable distribution $q(w|\theta)$, which is often 
-chosen to come from the mean-field family, i.e. $q(z) = \prod_i q(z_i)$, but can
+chosen to come from the mean-field family, i.e., $q(z) = \prod_i q(z_i)$, but can
 be more general \cite{blundellWeightUncertainty2015}. We then formulate an 
 optimization problem to find the parameters $\theta$. Specifically, we minimize
 the Kullback-Leibler (KL) divergence from the true posterior distribution $P$ to
@@ -238,7 +238,7 @@ Our optimization problem can then be stated as
 
 where $\mathcal{D} = (x_i, y_i)_i$ is the training dataset. We remark that, in Equation \ref{eq:2}, the $P(\mathcal{D})$ term resulting from applying Bayes' theorem to $P(w|\mathcal{D})$ disappears because it is irrelevant to the optimization.
 
-Equation \ref{eq:1} then gives us the optimization objective\footnote{We note that $-\mathcal{F}(\mathcal{D}, \theta)$ is often referred to as the evidence lower bound (ELBO) in the machine learning literature}
+Equation \ref{eq:1} then gives us the optimization objective\footnote{We note that $-\mathcal{F}(\mathcal{D}, \theta)$ is often referred to as the evidence lower bound (ELBO) in the machine learning literature.}
 
 \begin{equation}
     \mathcal{F}(\mathcal{D}, \theta) = D_{KL}(q(w|\theta) \Vert P(w)) - \mathbb{E}_{q(w|\theta)}[\log P(\mathcal{D}|w)].
@@ -299,7 +299,7 @@ while the latter reflects uncertainty in parameter estimation.
 
 In this section, we describe the data used for our experiments and the proposed
 model. The dataset used and relevant code are available on 
-GitHub\footnote{\url{https://github.com/kasaai/bnn-claims}}. The experiments are
+GitHub.\footnote{\url{https://github.com/kasaai/bnn-claims}} The experiments are
 implemented using the R programming language 
 \cite{rdevelopmentcoreteamLanguageEnvironment2011} and TensorFlow 
 \cite{tensorflow2015-whitepaper}.
@@ -379,14 +379,14 @@ We exhibit the predictors used and associated transformations in Table
 amount along with a claim open status indicator associated with it. We take the
 cash flow value and derive two variables from it: the paid loss and the 
 recovery, corresponding to the positive part and negative part of the cash flow,
-respectively. In other words, For each claim and for each time step, at most one
+respectively. In other words, for each claim and for each time step, at most one
 of paid loss and recovery can be nonzero. For predictors, both the paid losses 
 and recoveries are centered and scaled with respect to all instances of their 
 values in the training set. The response cash flow values are not normalized.
 
 Claim status indicator, which is a scalar value of 0 or 1, is one-hot encoded
-(i.e. represented using dummy variables);
-for each training sample a claim status value is available for each time step.
+(i.e., represented using dummy variables);
+for each training sample, a claim status value is available for each time step.
 
 Development year is defined as the number of years since the accident occurred. 
 It is then scaled to $[0, 1]$.
@@ -445,11 +445,11 @@ characteristics.
 \end{figure}
 
 Static categorical variable inputs, such as labor sector of the injured, are 
-indexed then connected to embedding layers \cite{guoEntityEmbeddings2016} and 
+indexed, then connected to embedding layers \cite{guoEntityEmbeddings2016} and 
 sequential data, including payments and claim statuses, are connected to long 
 short-term memory (LSTM) layers \cite{hochreiterLongShortterm1997}.
 
-The encoded inputs are concatenated together then repeated 11 times before being
+The encoded inputs are concatenated together, then repeated 11 times before being
 passed to a decoder LSTM layer which returns a sequence. The length of this 
 output sequence is so chosen to match our requirement to forecast a maximum of 
 11 steps into the future. Each time step of this sequence is connected to two 
@@ -471,7 +471,7 @@ and model training.
 
 \subsubsection{Embedding Layer}
 
-An embedding layer maps each level of a categorical variable to a fixed length 
+An embedding layer maps each level of a categorical variable to a fixed-length 
 vector in $n$-dimensional Euclidean space. The value of $n$ is a hyerparameter 
 chosen by the modeler; in our case we select $n = 2$ for all embedding layers, 
 which means we map each factor level to a point in $\mathbb{R}^2$. In contrast 
@@ -505,7 +505,7 @@ associated with each dense layer, we have
     q(w|\theta) = \mathcal{N}(\mu(\theta), \sigma(\theta)),
 \end{equation}
 
-where $\theta$ represent trainable parameters. The KL term associated with
+where $\theta$ represents trainable parameters. The KL term associated with
 estimation, as described in Section \ref{section:bnn}, is added to the neural 
 network loss during optimization. The dense layers each output four units to 
 parameterize the output distributions which we discuss next.
@@ -524,7 +524,7 @@ function:
     F(y) = w_1(v_1, v_2)P(y; v_3, (\alpha + \lambda\sigma(\beta v_4))^2) + w_2(v_1, v_2)F_0(y).
 \end{equation}
 
-We now describe the components of \ref{eq:fx}. First, 
+We now describe the components of Equation \ref{eq:fx}. First, 
 
 \begin{equation}
     w_i = \frac{e^{v_i}}{e^{v_1} + e^{v_2}}\quad (i = 1, 2)
@@ -537,8 +537,8 @@ accommodate zeros in the data. In other words, if $Y \sim LN(\mu, \sigma^2)$,
 then $Y - 0.001 \sim P$. This modification is necessary because we have zero 
 cash flows in the response sequences, and computing the likelihood becomes
 problematic since the support of the log-normal distribution does not contain
-zero\footnote{As of the writing of this paper, TensorFlow Probability attempts
-to evaluate all terms in the likelihood of the mixture.}.
+zero.\footnote{As of the writing of this paper, TensorFlow Probability attempts
+to evaluate all terms in the likelihood of the mixture.}
 
 \begin{equation}
     F_{0}(y)=\left\{\begin{matrix} 1, & \mbox{if }y\ge 0 \\ 0, & \mbox{if }y<0 \end{matrix}\right.
@@ -695,14 +695,14 @@ less certain about the severity distribution.
 \end{figure}
 
 In Figure \ref{fig:claim_paths} we show plausible future developments of the
-claim. Note that one thousand samples are drawn, so the handful scenarios that
-present large payments represent a small portion of the paths, which is 
+claim. Note that one thousand samples are drawn, so the handful of scenarios that
+present large payments represents a small portion of the paths, which is 
 consistent with the distributions of parameters we see above.
 
 \subsection{Aggregate estimates}
 
 To compute a point estimate for the total unpaid losses, we score each claim 
-once (i.e. sample from the weights distribution once) to obtain a distribution 
+once (i.e., sample from the weights distribution once) to obtain a distribution 
 for each time step for paid losses and recoveries. We then compute the means of
 the paid loss and recovery distributions and take the differences to obtain the 
 net cash flow amount. The final unpaid loss estimate is then the sum of all the 
