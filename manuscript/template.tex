@@ -445,11 +445,11 @@ characteristics.
 \end{figure}
 
 Static categorical variable inputs, such as labor sector of the injured, are 
-indexed then connected to embedding layers \cite{guoEntityEmbeddings2016} and 
+indexed, then connected to embedding layers \cite{guoEntityEmbeddings2016} and 
 sequential data, including payments and claim statuses, are connected to long 
 short-term memory (LSTM) layers \cite{hochreiterLongShortterm1997}.
 
-The encoded inputs are concatenated together then repeated 11 times before being
+The encoded inputs are concatenated together, then repeated 11 times before being
 passed to a decoder LSTM layer which returns a sequence. The length of this 
 output sequence is so chosen to match our requirement to forecast a maximum of 
 11 steps into the future. Each time step of this sequence is connected to two 
