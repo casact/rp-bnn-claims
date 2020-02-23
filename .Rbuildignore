@@ -1,1 +1,4 @@
+^renv$
+^renv\.lock$
+^requirements\.txt$
 ^\.travis\.yml$
