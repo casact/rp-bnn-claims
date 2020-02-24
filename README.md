@@ -25,4 +25,4 @@ The raw data file `Simulated.Cashflow.txt` was created using the simulation mach
 remotes::install_github("rstudio/renv")
 ```
 
-then run `renv::restore()`.
+then run `renv::init()` followed by `renv::restore()`.
